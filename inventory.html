@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="static/styles.css">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grow Kit Inventory</title>
+    <script src="static/stock_app.js" defer></script>
+    <script src="static/sorttable.js" defer></script>
+    <style>
+        input[type='number'] {
+            text-align: right;
+        }
+        /* Navigation menu styles */
+        .hidden { display: none; }
+    </style>
+</head>
+<body data-active-tab="{{ active_tab|default('all') }}" data-initial-manufacturer="{{ initial_manufacturer or '' }}">
+    <form method="post" id="refreshForm" action="{{ url_for('refresh_page') }}" style="display: none;">
+        <input type="hidden" name="refresh" value="true">
+    </form>
+    <div class="nav-menu">
+        <a href="{{ url_for('fastbuds') }}">Fastbuds</a>
+        <a href="{{ url_for('green_house') }}">Green House Seeds</a>
+        <a href="{{ url_for('barney') }}">Barneys Farm</a>
+        <a href="{{ url_for('dutch_passion') }}">Dutch Passion</a>
+        <a href="{{ url_for('rqs') }}">Royal Queen Seeds</a>
+        <a href="{{ url_for('all_seeds') }}">All Seeds Inventory</a>
+        <a href="{{ url_for('inventory') }}" class="active">Grow Kit Stock List</a>
+        <a href="{{ url_for('bulk_edit', table='cannabis_seeds', field='retail_price') }}">Bulk Edit</a>
+        <a href="{{ url_for('proposed_order') }}">Order</a>
+        <a href="{{ url_for('show_log') }}">Log</a>
+        <button id="toggle-theme">Toggle Theme</button>
+    </div>
+
+    <div class="search-container">
+        <input type="text" id="searchInput" onkeyup="searchTable()" placeholder="Search...">
+        <button class="clear-btn" onclick="clearSearch()">Clear Search</button>
+                <button class="clear-btn" onclick="updateAllStock()">Update All</button>
+                <button class="clear-btn" onclick="replaceButtons('growkits')">Edit</button>
+                <a href="{{ url_for('choose_table') }}" class="clear-btn">Add Product</a>
+
+                <button id="toggle-button" class="clear-btn" onclick="toggleEmptyRows()">Toggle Stock</button>
+                <a href="{{ url_for('toggle_specials') }}?next={{ request.full_path | urlencode }}" class="clear-btn" id="toggle-on-sale-visual">
+                    {{ 'Hide On Sale' if (request.cookies.get('show_special_prices', '1') == '1') else 'Show On Sale' }}
+                </a>
+                <button class="clear-btn" onclick="scrollToTop()">Page Up</button>
+                <h2>Grow Kits</h2>
+        </div>
+        {% if all_manufacturers|length > 1 %}
+        <div id="manufacturer-filter-buttons" style="margin-top: 0.5em;">
+            {% set manu = initial_manufacturer or '' %}
+            <button class="manufacturer-filter-btn {% if not manu %}active{% endif %}" data-manufacturer="all">Show All Manufacturers</button>
+            {% for m in all_manufacturers %}
+                <button class="manufacturer-filter-btn {% if manu and m == manu %}active{% endif %}" data-manufacturer="{{ m|e }}">{{ m }}</button>
+            {% endfor %}
+        </div>
+        {% endif %}
+    <div id="filter-buttons">
+    <button class="filter-btn" data-table="all">Show All</button>
+    <button class="filter-btn" data-table="growkits">Grow Kits</button>
+    <button class="filter-btn" data-table="spores">Spores</button>
+    <button class="filter-btn" data-table="swabs">Swabs</button>
+    <button class="filter-btn" data-table="cultures">Cultures</button>
+    <button class="filter-btn" data-table="misc">Misc</button>
+    </div>
+    <div class="container {% if active_tab not in ['all','growkits'] %}hidden{% endif %}" data-table="growkits">
+        <div class="inventory">
+            <h2>Grow Kits</h2>
+            {# Collect all unique sizes from products_grouped #}
+            {% set unique_sizes = [] %}
+            {% for manufacturer, names in products_grouped.items() %}
+                {% for name, products in names.items() %}
+                    {% for product in products %}
+                        {% if product.size not in unique_sizes %}
+                            {% set _ = unique_sizes.append(product.size) %}
+                        {% endif %}
+                    {% endfor %}
+                {% endfor %}
+            {% endfor %}
+            {% set unique_sizes = unique_sizes | sort %}
+            <table class="seed-table sortable">
+                <tr>
+                    <th class="name-column">Name</th>
+                    <th class="manufacturer-column">Manufacturer</th>
+                    {% for size in unique_sizes %}
+                        <th colspan="1" class="sorttable_numeric variant-start">{{ size }}cc</th>
+                        <th class="sorttable_numeric">Price</th>
+                    {% endfor %}
+                </tr>
+                {% for manufacturer in products_grouped.keys() | sort %}
+                    {% set names = products_grouped[manufacturer].keys() | sort %}
+                    {% for name in names %}
+                    {% set stable_key = (name|trim|lower) ~ '|' ~ (manufacturer|string|trim|lower) %}
+                    <tr data-key="{{ stable_key }}">
+                        <td>{{ name }}</td>
+                        <td>{{ manufacturer }}</td>
+                        {% for size in unique_sizes %}
+                            {% set product = (products_grouped[manufacturer][name] | selectattr('size', 'equalto', size) | list | first) %}
+                            {% if product %}
+                                {% set restock_class = 'no-restock' if not product['available_for_restock'] else '' %}
+                                <td class="variant-start {{ restock_class }}"{% if product['manufacturer'] %} data-manufacturer="{{ product['manufacturer'] }}"{% endif %}>
+                                    <form class="stock_input" action="{{ url_for('update_stock', table='growkits', id=product.id) }}" method="post">
+                                        <input type="hidden" name="last_refresh_stock" value="{{ product.stock }}">
+                                        <input type="number" name="submitted_stock" value="{{ product.stock }}" min="0" tabindex="{{ loop.index }}" title="">
+                                        <input type="submit" value="Update" tabindex=-1>
+                                    </form>
+                                </td>
+                                <td data-sort="{% set sp = product.special_price %}{% set rp = product.retail_price %}{% if sp is not none and (sp|string|lower) != 'none' and (sp|string|trim) != '' %}{{ sp|float }}{% else %}{{ rp|float }}{% endif %}">{{ product.retail_price | format_price_with_special(product.special_price) | safe }}</td>
+                            {% else %}
+                                <td></td>
+                                <td></td>
+                            {% endif %}
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+    <div class="container {% if active_tab not in ['all','spores'] %}hidden{% endif %}" data-table="spores">
+        <div class="inventory">
+            <h2>Spores (Excluding Swabs)</h2>
+            <table class="seed-table sortable">
+                <thead id="table-header">
+                    <tr>
+                        <th>Name</th>
+                        {% set all_forms = spores_grouped.values() | sum(start=[]) | map(attribute='form') | list %}
+                        {% set unique_forms = all_forms | unique | sort %}
+                        {% for form in unique_forms if form != 'Swab' %}
+                            <th class="sorttable_numeric variant-start">{{ form }}</th>
+                            <th class="sorttable_numeric">Price</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                {% for name, spores in spores_grouped.items() %}
+                {% if spores[0]['form'] != 'Swab' %}
+                <tr data-key="{{ spores[0].id }}">
+                    <td>{{ name }}</td>
+                    {% for form in unique_forms if form != 'Swab' %}
+                        {% set spore = (spores | selectattr('form', 'equalto', form) | list | first) %}
+                        {% if spore %}
+                            <td class="variant-start {{ 'no-restock' if not spore['available_for_restock'] else '' }}"{% if spore['manufacturer'] %} data-manufacturer="{{ spore['manufacturer'] }}"{% endif %}>
+                                <form class="stock_input" action="{{ url_for('update_stock', table='spores', id=spore.id) }}" method="post">
+                                    <input type="hidden" name="last_refresh_stock" value="{{ spore.stock }}">
+                                    <input type="number" name="submitted_stock" value="{{ spore.stock }}" min="0" tabindex="{{ loop.index }}" title="">
+                                    <input type="submit" value="Update" tabindex=-1>
+                                </form>
+                            </td>
+                            <td data-sort="{% set sp = spore.special_price %}{% set rp = spore.retail_price %}{% if sp is not none and (sp|string|lower) != 'none' and (sp|string|trim) != '' %}{{ sp|float }}{% else %}{{ rp|float }}{% endif %}">{{ spore.retail_price | format_price_with_special(spore.special_price) | safe }}</td>
+                        {% else %}
+                            <td></td>
+                            <td></td>
+                        {% endif %}
+                    {% endfor %}
+                </tr>
+                {% endif %}
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+    <div class="container {% if active_tab not in ['all','swabs'] %}hidden{% endif %}" data-table="swabs">
+        <div class="inventory">
+            <h2>Spores (Swabs Only)</h2>
+            <table class="seed-table sortable">
+                <thead id="table-header">
+                    <tr>
+                        <th>Name</th>
+                        <th class="sorttable_numeric variant-start">Stock</th>
+                        <th class="sorttable_numeric">Price</th>
+                    </tr>
+                </thead>
+                {% for name, spores in spores_grouped.items() %}
+                {% if spores[0]['form'] == 'Swab' %}
+                <tr data-key="{{ spores[0].id }}">
+                    <td>{{ name }}</td>
+                    {% set spore = spores[0] %}
+                    <td class="{{ 'no-restock' if not spore['available_for_restock'] else '' }}"{% if spore['manufacturer'] %} data-manufacturer="{{ spore['manufacturer'] }}"{% endif %}>
+                        <form class="stock_input" action="{{ url_for('update_stock', table='spores', id=spore.id) }}" method="post">
+                            <input type="hidden" name="last_refresh_stock" value="{{ spore.stock }}">
+                            <input type="number" name="submitted_stock" value="{{ spore.stock }}" min="0" tabindex="{{ loop.index }}" title="">
+                            <input type="submit" value="Update" tabindex=-1>
+                        </form>
+                    </td>
+                    <td data-sort="{% set sp = spore.special_price %}{% set rp = spore.retail_price %}{% if sp is not none and (sp|string|lower) != 'none' and (sp|string|trim) != '' %}{{ sp|float }}{% else %}{{ rp|float }}{% endif %}">{{ spore.retail_price | format_price_with_special(spore.special_price) | safe }}</td>
+                </tr>
+                {% endif %}
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+
+    <div class="container {% if active_tab not in ['all','cultures'] %}hidden{% endif %}" data-table="cultures">
+        <div class="inventory">
+            <h2>Cultures</h2>
+            <table class="seed-table sortable">
+                <thead id="table-header">
+                    <tr>
+                        <th>Name</th>
+                        <th class="manufacturer-column">Manufacturer</th>
+                        {% set all_forms = cultures_grouped.values() | sum(start=[]) | map(attribute='form') | list %}
+                        {% set unique_forms = all_forms | unique | sort %}
+                        {% for form in unique_forms %}
+                            <th class="sorttable_numeric variant-start">{{ form }}</th>
+                            <th class="sorttable_numeric">Price</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                {% for name, cultures in cultures_grouped.items() %}
+                <tr data-key="{{ name }}">
+                    <td>{{ name }}</td>
+                    <td class="manufacturer-column">{{ cultures[0]['manufacturer'] or '' }}</td>
+                    {% for form in unique_forms %}
+                        {% set culture = (cultures | selectattr('form', 'equalto', form) | list | first) %}
+                        {% if culture %}
+                            <td class="{{ 'no-restock' if not culture['available_for_restock'] else '' }}"{% if culture['manufacturer'] %} data-manufacturer="{{ culture['manufacturer'] }}"{% endif %}>
+                                <form class="stock_input" action="{{ url_for('update_stock', table='cultures', id=culture.id) }}" method="post">
+                                    <input type="hidden" name="last_refresh_stock" value="{{ culture.stock }}">
+                                    <input type="number" name="submitted_stock" value="{{ culture.stock }}" min="0" tabindex="{{ loop.index }}" title="">
+                                    <input type="submit" value="Update" tabindex=-1>
+                                </form>
+                            </td>
+                            <td data-sort="{% set sp = culture.special_price %}{% set rp = culture.retail_price %}{% if sp is not none and (sp|string|lower) != 'none' and (sp|string|trim) != '' %}{{ sp|float }}{% else %}{{ rp|float }}{% endif %}">{{ culture.retail_price | format_price_with_special(culture.special_price) | safe }}</td>
+                        {% else %}
+                            <td></td>
+                            <td></td>
+                        {% endif %}
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+
+    <div class="container {% if active_tab not in ['all','misc'] %}hidden{% endif %}" data-table="misc">
+        <div class="inventory">
+            <h2>Miscellaneous Products</h2>
+            <table class="seed-table sortable">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th class="manufacturer-column">Manufacturer</th>
+                        <th class="sorttable_numeric">Stock</th>
+                        <th class="sorttable_numeric">Price</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in misc_grouped %}
+                        {% set stable_key = (item['name']|trim|lower) ~ '|' ~ (item['manufacturer']|string|trim|lower) %}
+                        <tr data-key="{{ stable_key }}">
+                        <td>{{ item['name'] }}</td>
+                        <td class="manufacturer-column">{{ item['manufacturer'] or '' }}</td>
+                        <td class="{{ 'no-restock' if not item['available_for_restock'] else '' }}"{% if item['manufacturer'] %} data-manufacturer="{{ item['manufacturer'] }}"{% endif %}>
+                            <form class="stock_input" action="{{ url_for('update_stock', table='misc', id=item.id) }}" method="post">
+                                <input type="hidden" name="last_refresh_stock" value="{{ item.stock }}">
+                                <input type="number" name="submitted_stock" value="{{ item.stock }}" min="0" tabindex="{{ loop.index }}" title="">
+                                <input type="submit" value="Update" tabindex="-1">
+                            </form>
+                        </td>
+                        <td data-sort="{% set sp = item.special_price %}{% set rp = item.retail_price %}{% if sp is not none and (sp|string|lower) != 'none' and (sp|string|trim) != '' %}{{ sp|float }}{% else %}{{ rp|float }}{% endif %}">{{ item.retail_price | format_price_with_special(item.special_price) | safe }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,544 @@
+:root {
+    --bg-dark: #1b1b1b;
+    --text-light: #c8c8c8;
+    --link-dark-bg: #242424;
+    --link-dark-border: #343434;
+    /* Stronger control borders for better contrast */
+    --control-border-dark: #6b6b6b;
+    --control-border-light: #bdbdbd;
+    --link-hover-bg: #575757;
+    --table-header-bg: #333333;
+    --table-header-text: #ffffff;
+    --row-odd-bg: #2b2b2b;
+    --row-even-bg: #1f1f1f;
+    --input-bg: #444444;
+    --input-border-radius: 5px;
+    --input-focus-bg: #777777;
+    --placeholder-text: #ffffff;
+    --light-bg: #ffffff;
+    --light-text: #000000;
+    --light-link-bg: #f0f0f0;
+    --light-link-border: #d0d0d0;
+    --light-link-hover-bg: #cccccc;
+    --light-table-header-bg: #e0e0e0;
+    --light-row-odd-bg: #dbdbdb;
+    --light-row-even-bg: #ffffff;
+    --light-input-bg: #dddddd;
+    --light-placeholder-text: #000000;
+    --highlight-bg-dark: #4a90e2;
+    --highlight-text-dark: #ffffff;
+    --highlight-bg-light: #cce4ff;
+    --highlight-text-light: #000000;
+    --header_seperator-light: #000000;
+    --header_seperator-dark: #000000;
+}
+
+body {
+    background-color: var(--bg-dark);
+    color: var(--text-light);
+    font-family: sans-serif;
+    margin: 0;
+}
+
+h1 {
+    margin-top: 0;
+}
+
+h2, h3 {
+    padding-left: 20px;
+}
+
+/* Navigation Menu */
+.nav-menu {
+    margin-bottom: 20px;
+    display: flex;
+    gap: 10px;
+    padding: 10px;
+    flex-wrap: wrap;
+}
+.nav-menu a {
+    text-decoration: none;
+    padding: 10px;
+    background-color: var(--link-dark-bg);
+    border: 1px solid var(--link-dark-border);
+    color: #ffffff;
+    border-radius: 3px;
+}
+.nav-menu a:hover {
+    background-color: var(--link-hover-bg);
+}
+.nav-menu a.active {
+    background-color: var(--light-link-bg);
+    color: var(--light-text);
+}
+.nav-menu button {
+    margin-left: auto;
+}
+
+/* Containers */
+.container {
+    padding: 0 15px;
+}
+
+.table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Log & Pagination */
+pre.log-output {
+    padding: 10px;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    overflow-y: auto;
+}
+
+.log-controls {
+    margin: 15px 0;
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.log-controls form {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+}
+
+.pagination {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.pagination a,
+.pagination span {
+    padding: 5px 10px;
+    border: 1px solid var(--link-dark-border);
+    border-radius: 3px;
+    text-decoration: none;
+}
+
+.pagination span {
+    border: none;
+    padding: 5px 0;
+}
+
+.error {
+    color: red;
+    font-weight: bold;
+    margin-top: 10px;
+}
+
+/* Table Styles */
+table {
+    border-collapse: collapse;
+    table-layout: auto;
+}
+
+th {
+    background-color: var(--table-header-bg);
+    color: var(--table-header-text);
+    position: sticky;
+    padding: 10px 0;
+    top: 65px;
+    z-index: 10;
+}
+
+tr:nth-child(odd) {
+    background-color: var(--row-odd-bg);
+}
+tr:nth-child(even) {
+    background-color: var(--row-even-bg);
+}
+
+table td, table th {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Variant group separators: add bookend borders on group start/end */
+.seed-table th.variant-start,
+.seed-table td.variant-start {
+    border-left: 2px solid var(--header_seperator-dark);
+}
+.seed-table th.variant-end,
+.seed-table td.variant-end {
+    border-right: 1px solid var(--header_seperator-dark);
+}
+.light-mode .seed-table th.variant-start,
+.light-mode .seed-table td.variant-start {
+    border-left-color: var(--header_seperator-light);
+}
+.light-mode .seed-table th.variant-end,
+.light-mode .seed-table td.variant-end {
+    border-right-color: var(--header_seperator-light);
+}
+
+/* Filter Buttons */
+#filter-buttons {
+    margin-top: 20px;
+}
+
+/* Unified toggle button styles for filter, manufacturer, and edit toggle */
+.filter-btn,
+.manufacturer-filter-btn,
+.edit-toggle-btn {
+    height: 40px;
+    padding: 10px 20px;
+    font-size: 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    background-color: var(--input-bg);
+    color: #ffffff;
+    border: 1px solid var(--link-dark-border);
+    margin-right: 5px;
+    margin-bottom: 5px;
+    transition: background 0.2s, color 0.2s;
+}
+.filter-btn.active,
+.manufacturer-filter-btn.active,
+.edit-toggle-btn.active {
+    background-color: var(--light-link-bg);
+    color: var(--light-text);
+    border: 1px solid var(--light-link-border);
+}
+.filter-btn:hover,
+.manufacturer-filter-btn:hover,
+.edit-toggle-btn:hover {
+    background-color: var(--input-focus-bg);
+    color: #fff;
+}
+
+/* Input & Button Styles */
+input, button, a.clear-btn {
+    background-color: var(--input-bg);
+    border-radius: var(--input-border-radius);
+    color: #ffffff;
+}
+
+input[type="text"], input[type="number"], input[type="submit"] {
+    background-color: var(--table-header-bg);
+    height: 30px;
+}
+
+input.zero-value {
+    background-color: #161616;
+    color: #cccccc;
+}
+
+input:focus, input:hover,
+button:focus, button:hover,
+a.clear-btn:hover {
+    background-color: var(--input-focus-bg);
+    outline: none;
+}
+
+button, a.clear-btn {
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    padding: 0 10px;
+}
+
+::placeholder {
+    color: var(--placeholder-text);
+}
+
+/* Clear Button Specific */
+.clear-btn {
+    margin-left: 5px;
+    font-size: smaller;
+}
+
+/* Search Container */
+#searchInput {
+    height: 40px;
+    width: 400px;
+    font-size: 16px;
+}
+
+/* On smaller screens, halve the search input width to keep controls on one row */
+@media (max-width: 1300px) {
+    .search-container #searchInput {
+        width: 200px;
+    }
+}
+
+.search-container {
+    display: flex;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background-color: var(--table-header-bg);
+}
+
+.search-container .clear-btn {
+    margin-left: 30px;
+    height: 40px;
+    font-size: 16px;
+}
+
+/* Make all buttons/links in the search bar look identical */
+.search-container .clear-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 40px;
+    line-height: 1;
+    vertical-align: middle;
+    font-size: 16px;
+    background-color: var(--input-bg);
+    border: 1px solid var(--control-border-dark);
+    border-radius: var(--input-border-radius);
+    padding: 0 10px;
+    text-decoration: none;
+    color: #ffffff;
+    cursor: pointer;
+    box-sizing: border-box;
+}
+.search-container .clear-btn:hover {
+    background-color: var(--input-focus-bg);
+}
+
+/* Ensure Edit toggle gets the same dimensions/border when JS adds class */
+/* Edit toggle shares identical core style via the rule above */
+
+/* Provide a default border for clear-btn anywhere (fallback outside search bars) */
+.clear-btn { border: 1px solid var(--control-border-dark); }
+
+/* Light mode border contrast */
+.light-mode .search-container .clear-btn,
+.light-mode .clear-btn { border-color: var(--control-border-light); }
+
+/* Match search UI look for date input and Search button */
+.search-container input[type="date"] {
+    height: 40px;
+    font-size: 16px;
+    background-color: var(--input-bg);
+    border: 1px solid var(--link-dark-border);
+    border-radius: var(--input-border-radius);
+    color: #ffffff;
+    padding: 0 10px;
+    box-sizing: border-box;
+}
+.search-container button[type="submit"] {
+    height: 40px;
+    font-size: 16px;
+    background-color: var(--input-bg);
+    border: 1px solid var(--link-dark-border);
+    border-radius: var(--input-border-radius);
+    padding: 0 10px;
+    color: #ffffff;
+    cursor: pointer;
+    box-sizing: border-box;
+}
+.search-container button[type="submit"]:hover {
+    background-color: var(--input-focus-bg);
+}
+
+/* On Sale toggle button highlight */
+.on-sale-btn.active {
+    background-color: #ffb300 !important;
+    color: #000000 !important;
+    font-weight: 700;
+}
+
+/* Visually Hidden */
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+}
+
+/* Light Mode */
+.light-mode {
+    background-color: var(--light-bg);
+    color: var(--light-text);
+}
+.light-mode .nav-menu a {
+    background-color: var(--light-link-bg);
+    border: 1px solid var(--light-link-border);
+    color: var(--light-text);
+}
+.light-mode .nav-menu a:hover {
+    background-color: var(--light-link-hover-bg);
+}
+.light-mode .nav-menu a.active {
+    background-color: var(--link-dark-bg);
+    color: var(--text-light);
+}
+.light-mode th {
+    background-color: var(--light-table-header-bg);
+    color: var(--light-text);
+}
+.light-mode tr:nth-child(odd) {
+    background-color: var(--light-row-odd-bg);
+}
+.light-mode tr:nth-child(even) {
+    background-color: var(--light-row-even-bg);
+}
+.light-mode input, .light-mode button, .light-mode a.clear-btn {
+    background-color: var(--light-input-bg);
+    color: var(--light-text);
+}
+.light-mode input[type="text"], .light-mode input[type="number"] {
+    background-color: #eeeeee;
+}
+.light-mode input.zero-value {
+    background-color: #797979;
+}
+.light-mode input:focus, .light-mode input:hover,
+.light-mode button:focus, .light-mode button:hover,
+.light-mode a.clear-btn:hover {
+    background-color: #bbbbbb;
+}
+.light-mode ::placeholder {
+    color: var(--light-placeholder-text);
+}
+.light-mode .search-container {
+    background-color: var(--light-table-header-bg);
+}
+
+/* Form Layout */
+.form-container {
+    max-width: 900px;
+    margin: 20px auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+.form-container h1 {
+    margin-bottom: 20px;
+}
+.field-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 20px;
+}
+.field-group label {
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+.field-group input[type="text"] {
+    width: 100%;
+    box-sizing: border-box;
+}
+.existing-values {
+    margin-top: 5px;
+    font-size: 0.9em;
+}
+.existing-values ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.existing-values li {
+    display: inline-block;
+    margin-right: 5px;
+}
+
+/* Variants Table */
+.variants-container {
+    border: 1px solid var(--link-dark-border);
+    padding: 10px;
+}
+.variants-container h2 {
+    margin-top: 0;
+}
+.variants-table {
+    width: 100%;
+    margin-top: 10px;
+}
+.variants-table th,
+.variants-table td {
+    border: 1px solid var(--link-dark-border);
+    padding: 8px 10px;
+    vertical-align: middle;
+}
+.variants-table th {
+    text-align: left;
+    width: 160px;
+}
+
+/* Variant Buttons */
+.add-variant-btn,
+.remove-variant-btn {
+    background-color: var(--input-bg);
+    border: 1px solid var(--link-dark-border);
+    border-radius: var(--input-border-radius);
+    padding: 5px 10px;
+    cursor: pointer;
+    margin-top: 5px;
+    color: #ffffff;
+}
+.add-variant-btn:hover,
+.remove-variant-btn:hover {
+    background-color: var(--input-focus-bg);
+}
+
+/* Submit Buttons */
+input[type="submit"] {
+    background-color: var(--input-bg);
+    border: 1px solid var(--link-dark-border);
+    padding: 5px 10px;
+    cursor: pointer;
+    color: #ffffff;
+}
+input[type="submit"]:hover {
+    background-color: var(--input-focus-bg);
+}
+
+/* Special Field Colors */
+.no-restock {
+    opacity: 0.6;
+    border-left: 4px solid #d9534f;
+    filter: grayscale(50%);
+}
+.retail-price { color: green !important; font-weight: bold; }
+.storage-location { color: #1e90ff !important; font-weight: bold; }
+.seed-type-feminized { color: #e75480 !important; font-weight: bold; }
+.seed-type-feminized-autoflower { color: #228b22 !important; font-weight: bold; }
+.seed-type-regular { color: #8b4513 !important; font-weight: bold; }
+.seed-type-other { color: #a020f0 !important; font-weight: bold; }
+.name { color: #ff4500 !important; font-weight: bold; }
+.pack-size { color: #4682b4 !important; font-weight: bold; }
+.manufacturer { color: #daa520 !important; font-weight: bold; }
+.stock { color: #32cd32 !important; font-weight: bold; }
+
+input.dynamic-width {
+    min-width: 50px; /* Set a reasonable minimum width */
+    max-width: 100%; /* Prevent it from growing too large */
+    box-sizing: content-box; /* Ensure width is based on content */
+}
+
+/* Fixed widths for bulk-edit price/discount inputs to avoid relayout */
+.special-price-input {
+    width: 9ch;
+}
+.discount-percent-input {
+    width: 5ch;
+}
+
+/* Base highlight style */
+tr.highlight {
+  background-color: var(--highlight-bg-dark) !important;
+  color: var(--highlight-text-dark) !important;
+  font-weight: bold;
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+/* Light mode variant */
+.light-mode tr.highlight {
+  background-color: var(--highlight-bg-light) !important;
+  color: var(--highlight-text-light) !important;
+}
